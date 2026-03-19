@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
-const Loader = ({ loaded }) => {
+const Loader = ({ loaded, progress = 0 }) => {
   const loaderRef = useRef(null);
   const textRef = useRef(null);
   const lineRef = useRef(null);
@@ -16,24 +16,33 @@ const Loader = ({ loaded }) => {
       { opacity: 0, letterSpacing: '0.5em', y: 8 },
       { opacity: 1, letterSpacing: '0.2em', y: 0, duration: 1.2, ease: 'power3.out', delay: 0.2 }
     );
-
-    // Thin loading line grows from left to right
-    gsap.fromTo(
-      lineRef.current,
-      { scaleX: 0, transformOrigin: 'left center' },
-      { scaleX: 1, duration: 1.6, ease: 'power2.inOut', delay: 0.3 }
-    );
   }, []);
+
+  // Update progress bar scale based on progress prop
+  useEffect(() => {
+    if (lineRef.current) {
+      gsap.to(lineRef.current, {
+        scaleX: progress / 100,
+        duration: 0.4,
+        ease: 'power1.out',
+      });
+    }
+  }, [progress]);
 
   useEffect(() => {
     if (!loaded) return;
+
+    // Final push to 100% just in case
+    if (lineRef.current) {
+      gsap.to(lineRef.current, { scaleX: 1, duration: 0.3 });
+    }
 
     // Exit: fade out the entire loader once images are ready
     gsap.to(loaderRef.current, {
       opacity: 0,
       duration: 0.9,
       ease: 'power2.inOut',
-      delay: 0.3,
+      delay: 0.5,
       onComplete: () => {
         if (loaderRef.current) loaderRef.current.style.display = 'none';
       },

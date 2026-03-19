@@ -5,7 +5,7 @@ import Footer from './components/Footer'
 
 function App() {
   return (
-    <main className="min-h-screen bg-[#050505] text-white">
+    <main className="min-h-svh bg-[#050505] text-white">
       <Navbar />
       <RingScroll />
       <ExploreSection />

@@ -22,34 +22,38 @@ const RingScroll = () => {
   const textRef2 = useRef(null);
   const textRef3 = useRef(null);
   
-  const [images, setImages] = useState([]);
+  const imagesRef = useRef([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
 
   useEffect(() => {
     let loadedCount = 0;
-    const imgArray = [];
+    // 25 frames is enough to show the start and give a "ready" feel
+    const LOAD_THRESHOLD = 25; 
 
     imageUrls.forEach((url, i) => {
       const img = new Image();
       img.src = url;
       img.onload = () => {
         loadedCount++;
-        if (loadedCount === FRAME_COUNT) {
-          setImages(imgArray);
+        const prog = Math.round((loadedCount / FRAME_COUNT) * 100);
+        setLoadProgress(prog);
+
+        // Allow interaction once threshold is met
+        if (loadedCount === LOAD_THRESHOLD) {
+          setLoaded(true);
+        }
+        
+        // Final fallback if threshold was missed or for 100% state
+        if (loadedCount === FRAME_COUNT && !loaded) {
           setLoaded(true);
         }
       };
-      // Important to catch errors so it doesn't hang indefinitely if one image is missing
       img.onerror = () => {
-        console.error(`Failed to load image: ${url}`);
         loadedCount++;
-        // Still proceed to avoid permanent hanging
-        if (loadedCount === FRAME_COUNT) {
-          setImages(imgArray);
-          setLoaded(true);
-        }
+        if (loadedCount === FRAME_COUNT && !loaded) setLoaded(true);
       };
-      imgArray[i] = img;
+      imagesRef.current[i] = img;
     });
   }, []);
 
@@ -58,8 +62,24 @@ const RingScroll = () => {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
     const currentFrame = { frame: 0 };
+
+    const renderFrame = (index) => {
+      if (!ctx) return;
+      const img = imagesRef.current[index];
+      
+      // Essential Guard: Only draw if image exists and is loaded
+      if (img && img.complete && img.naturalWidth !== 0) {
+        if (canvas.width !== img.width || canvas.height !== img.height) {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0);
+      }
+    };
 
     const resizeCanvas = () => {
       renderFrame(currentFrame.frame);
@@ -67,20 +87,6 @@ const RingScroll = () => {
 
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 0);
-
-    function renderFrame(index) {
-      if (!ctx || !images[index]) return;
-      const img = images[index];
-      if (!img.complete || img.naturalWidth === 0) return;
-      if (canvas.width !== img.width || canvas.height !== img.height) {
-        canvas.width = img.width;
-        canvas.height = img.height;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0);
-    }
 
     renderFrame(0);
 
@@ -128,12 +134,12 @@ const RingScroll = () => {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, { dependencies: [loaded, images], scope: containerRef });
+  }, { dependencies: [loaded], scope: containerRef });
 
   return (
     <div ref={containerRef} className="relative w-full h-[400vh] bg-[#050505]">
-      <Loader loaded={loaded} />
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#050505]">
+      <Loader loaded={loaded} progress={loadProgress} />
+      <div className="sticky top-0 h-svh w-full overflow-hidden bg-[#050505]">
         <canvas ref={canvasRef} className="w-full h-full object-cover" />
         
         {/* Cinematic darkening overlay */}
