@@ -1,15 +1,16 @@
 import RingScroll from './components/RingScroll'
 import Navbar from './components/Navbar'
-import { ReactLenis } from '@studio-freight/react-lenis'
+import ExploreSection from './components/ExploreSection'
+import Footer from './components/Footer'
 
 function App() {
   return (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-      <main className="min-h-screen bg-[#050505] text-white">
-        <Navbar />
-        <RingScroll />
-      </main>
-    </ReactLenis>
+    <main className="min-h-screen bg-[#050505] text-white">
+      <Navbar />
+      <RingScroll />
+      <ExploreSection />
+      <Footer />
+    </main>
   )
 }
 

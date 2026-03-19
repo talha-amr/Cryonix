@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Loader from './Loader';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -58,51 +59,38 @@ const RingScroll = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    const currentFrame = { frame: 0 }; // Initialize early to fix ReferenceError
+    const currentFrame = { frame: 0 };
 
-    // Set canvas dimensions strictly to the image's intrinsic size
-    // and rely on CSS `object-fit: cover` to scale it.
     const resizeCanvas = () => {
-      // We only need to trigger a render, the canvas size will be set per-frame
       renderFrame(currentFrame.frame);
     };
 
     window.addEventListener('resize', resizeCanvas);
-    
-    // Defer initial render slightly until images are confirmed
     setTimeout(resizeCanvas, 0);
 
     function renderFrame(index) {
       if (!ctx || !images[index]) return;
-      
       const img = images[index];
-      if (!img.complete || img.naturalWidth === 0) return; // safeguard
-      
-      // Update canvas intrinsic resolution to match the frame exactly
+      if (!img.complete || img.naturalWidth === 0) return;
       if (canvas.width !== img.width || canvas.height !== img.height) {
         canvas.width = img.width;
         canvas.height = img.height;
       }
-      
-      // Clear and draw the image 1:1 natively
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0);
     }
 
-    // Initial render
     renderFrame(0);
 
     // --- MASTER TIMELINE ---
-    // Using a single robust timeline of duration 100 means
-    // time maps perfectly to percent scroll distance!
     let tl = gsap.timeline({
       scrollTrigger: {
         trigger: containerRef.current,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1.5, // 1.5 second smoothing
+        scrub: 1.5,
       }
     });
 
@@ -115,24 +103,24 @@ const RingScroll = () => {
       onUpdate: () => renderFrame(currentFrame.frame)
     }, 0);
 
-    // 2. 0% Scroll Text (Fades out from 0% to 15%)
+    // 2. 0% Scroll Text
     if (textRef0.current) {
       tl.to(textRef0.current, { opacity: 0, y: -50, duration: 15, ease: 'power1.inOut' }, 0);
     }
 
-    // 3. 30% Scroll Text (Fade in: 15-25%, Stay: 25-35%, Fade out: 35-45%)
+    // 3. 30% Scroll Text
     if (textRef1.current) {
       tl.to(textRef1.current, { opacity: 1, y: 0, duration: 10, ease: 'power1.out' }, 15);
       tl.to(textRef1.current, { opacity: 0, y: -50, duration: 10, ease: 'power1.in' }, 35);
     }
 
-    // 4. 60% Scroll Text (Fade in: 45-55%, Stay: 55-65%, Fade out: 65-75%)
+    // 4. 60% Scroll Text
     if (textRef2.current) {
       tl.to(textRef2.current, { opacity: 1, y: 0, duration: 10, ease: 'power1.out' }, 45);
       tl.to(textRef2.current, { opacity: 0, y: -50, duration: 10, ease: 'power1.in' }, 65);
     }
 
-    // 5. 90% Scroll Text (Fade in: 75-85%, Stay till 100%)
+    // 5. 90% Scroll Text
     if (textRef3.current) {
       tl.to(textRef3.current, { opacity: 1, y: 0, scale: 1, duration: 10, ease: 'power1.out' }, 75);
     }
@@ -144,19 +132,14 @@ const RingScroll = () => {
 
   return (
     <div ref={containerRef} className="relative w-full h-[400vh] bg-[#050505]">
-      {!loaded && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#050505] z-50">
-          <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
-          <p className="text-white/60 font-sans tracking-wide text-sm font-bold uppercase">Loading Sequence...</p>
-        </div>
-      )}
+      <Loader loaded={loaded} />
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#050505]">
         <canvas ref={canvasRef} className="w-full h-full object-cover" />
         
-        {/* 50% Black Overlay for cinematic darkening */}
+        {/* Cinematic darkening overlay */}
         <div className="absolute inset-0 bg-black/30 pointer-events-none" />
         
-        {/* Fixed Text Overlays Container */}
+        {/* Text Overlays */}
         <div className="absolute inset-0 pointer-events-none">
           {/* 0% Scroll - Hero */}
           <div ref={textRef0} className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -171,7 +154,6 @@ const RingScroll = () => {
           </div>
           
           {/* 30% Scroll - Ice Cracking */}
-          {/* y: 50 is set directly via inline style or tailwind, actually let's just initialize using inline style for GSAP to animate *from* */}
           <div ref={textRef1} style={{ opacity: 0, transform: 'translateY(50px)' }} className="absolute inset-0 flex items-center justify-start px-12 md:px-32">
             <h2 className="text-white/90 font-sans tracking-tight text-3xl md:text-5xl max-w-lg font-semibold leading-tight">
               Precision <br/>Within <span className="font-bold bg-gradient-to-r from-cyan-200 via-blue-300 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(147,197,253,0.4)]">Ice.</span>
@@ -190,7 +172,9 @@ const RingScroll = () => {
             <h2 className="text-white/90 font-sans tracking-tight text-4xl md:text-6xl font-semibold mb-6">
               Reveal the <span className="font-extrabold bg-gradient-to-r from-cyan-200 via-blue-300 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(147,197,253,0.4)]">Core.</span>
             </h2>
-            <button className="pointer-events-auto px-8 py-3 rounded-full border border-white/40 text-white hover:bg-white hover:text-black transition-all duration-300 tracking-widest text-sm font-bold uppercase backdrop-blur-md">
+            <button
+              onClick={() => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' })}
+              className="pointer-events-auto px-8 py-3 rounded-full border border-white/40 text-white hover:bg-white hover:text-black transition-all duration-300 tracking-widest text-sm font-bold uppercase backdrop-blur-md">
               Explore Collection
             </button>
           </div>
