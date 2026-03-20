@@ -6,8 +6,8 @@ import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Dynamically import all images in the sequence folder
-const imageModules = import.meta.glob('../assets/sequence-image/*.{jpg,png,webp,jpeg}', { eager: true });
+// Dynamically import all images in the sequence folder - Exclusively WebP
+const imageModules = import.meta.glob('../assets/sequence-image/*.webp', { eager: true });
 const imageUrls = Object.keys(imageModules)
   .sort()
   .map(key => imageModules[key].default);
