@@ -13,7 +13,7 @@ const imageUrls = Object.keys(imageModules)
   .map(key => imageModules[key].default);
 
 const FRAME_COUNT = imageUrls.length; // Dynamically get the count
-
+const isMobile = () => window.innerWidth <= 768;
 const RingScroll = () => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -111,13 +111,13 @@ const RingScroll = () => {
 
     // --- MASTER TIMELINE ---
     let tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 1.5,
-        onRefresh: () => renderFrame(currentFrame.frame)
-      }
+scrollTrigger: {
+  trigger: containerRef.current,
+  start: isMobile() ? '-10% top' : 'top top',  // pull back on mobile
+  end: 'bottom bottom',
+  scrub: 1.5,
+  onRefresh: () => renderFrame(currentFrame.frame)
+}
     });
 
     // 1. Canvas Scrub (0% to 100%)
