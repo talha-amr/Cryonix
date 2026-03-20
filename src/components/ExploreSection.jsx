@@ -70,6 +70,7 @@ const ExploreSection = () => {
         duration: 0.9,
         ease: 'power3.out',
         stagger: 0.15,
+        clearProps: 'all', // Clear inline styles after animation to avoid hover conflicts
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top 75%',
@@ -98,32 +99,34 @@ const ExploreSection = () => {
           <div
             key={product.id}
             ref={(el) => (cardsRef.current[i] = el)}
-            className="group relative bg-white/[0.03] border border-white/[0.07] rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+            className="will-change-transform"
           >
-            {/* Product Visual */}
-            <div className="h-64 md:h-72 overflow-hidden bg-white/2">
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
-              />
-            </div>
-
-            {/* Product Info */}
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-white font-sans text-lg font-semibold tracking-tight">{product.name}</h3>
-                  <p className="text-white/40 font-sans text-xs tracking-[0.15em] uppercase mt-0.5">{product.subtitle}</p>
-                </div>
-                <span className="text-white/80 font-sans text-sm font-medium">{product.price}</span>
+            <div className="group relative bg-white/[0.03] border border-white/[0.07] rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-500 hover:-translate-y-2 cursor-pointer">
+              {/* Product Visual */}
+              <div className="h-64 md:h-72 overflow-hidden bg-white/2">
+                <img 
+                  src={product.image} 
+                  alt={product.name}
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
+                />
               </div>
-              <p className="text-white/40 font-sans text-sm font-light leading-relaxed">{product.desc}</p>
 
-              <button className="mt-6 w-full py-3 rounded-full border border-white/10 text-white/60 text-xs tracking-[0.2em] uppercase font-medium
-                hover:border-white/40 hover:text-white hover:bg-white/5 transition-all duration-300">
-                View Piece
-              </button>
+              {/* Product Info */}
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-white font-sans text-lg font-semibold tracking-tight">{product.name}</h3>
+                    <p className="text-white/40 font-sans text-xs tracking-[0.15em] uppercase mt-0.5">{product.subtitle}</p>
+                  </div>
+                  <span className="text-white/80 font-sans text-sm font-medium">{product.price}</span>
+                </div>
+                <p className="text-white/40 font-sans text-sm font-light leading-relaxed">{product.desc}</p>
+
+                <button className="mt-6 w-full py-3 rounded-full border border-white/10 text-white/60 text-xs tracking-[0.2em] uppercase font-medium
+                  hover:border-white/40 hover:text-white hover:bg-white/5 transition-all duration-300">
+                  View Piece
+                </button>
+              </div>
             </div>
           </div>
         ))}

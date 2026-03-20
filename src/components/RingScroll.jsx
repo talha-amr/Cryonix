@@ -34,10 +34,19 @@ const RingScroll = () => {
     imageUrls.forEach((url, i) => {
       const img = new Image();
       img.src = url;
-      img.onload = () => {
+      img.onload = async () => {
         loadedCount++;
         const prog = Math.round((loadedCount / FRAME_COUNT) * 100);
         setLoadProgress(prog);
+
+        // Ensure the very first frame is fully decoded before showing anything
+        if (i === 0) {
+          try {
+            await img.decode();
+          } catch (e) {
+            console.warn("Image decode failed", e);
+          }
+        }
 
         // Allow interaction once threshold is met
         if (loadedCount === LOAD_THRESHOLD) {
@@ -45,13 +54,15 @@ const RingScroll = () => {
         }
         
         // Final fallback if threshold was missed or for 100% state
-        if (loadedCount === FRAME_COUNT && !loaded) {
+        if (loadedCount === FRAME_COUNT) {
           setLoaded(true);
+          // Refresh ScrollTrigger once everything is definitely in place
+          ScrollTrigger.refresh();
         }
       };
       img.onerror = () => {
         loadedCount++;
-        if (loadedCount === FRAME_COUNT && !loaded) setLoaded(true);
+        if (loadedCount === FRAME_COUNT) setLoaded(true);
       };
       imagesRef.current[i] = img;
     });
@@ -70,6 +81,7 @@ const RingScroll = () => {
       
       // Essential Guard: Only draw if image exists and is loaded
       if (img && img.complete && img.naturalWidth !== 0) {
+        // Set dimensions once if needed
         if (canvas.width !== img.width || canvas.height !== img.height) {
           canvas.width = img.width;
           canvas.height = img.height;
@@ -86,9 +98,16 @@ const RingScroll = () => {
     };
 
     window.addEventListener('resize', resizeCanvas);
-    setTimeout(resizeCanvas, 0);
+    
+    // Robust Initial Render Sequence
+    const initRender = () => {
+      renderFrame(0);
+      // Double check after a frame to ensure dimensions are settled
+      requestAnimationFrame(() => renderFrame(0));
+    };
 
-    renderFrame(0);
+    initRender();
+    setTimeout(initRender, 100);
 
     // --- MASTER TIMELINE ---
     let tl = gsap.timeline({
@@ -97,6 +116,7 @@ const RingScroll = () => {
         start: 'top top',
         end: 'bottom bottom',
         scrub: 1.5,
+        onRefresh: () => renderFrame(currentFrame.frame)
       }
     });
 
